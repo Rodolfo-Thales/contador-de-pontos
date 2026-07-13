@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.claude/
+.idea/
+.vscode/
+*.local
+.env
+.env.*
