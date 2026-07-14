@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from 'vue'
+
 const props = defineProps({
   group: { type: Object, required: true },
   isLeader: { type: Boolean, default: false },
@@ -8,6 +10,17 @@ const props = defineProps({
 const emit = defineEmits(['add-points'])
 
 const quickActions = [10, 50, 100]
+
+const customValue = ref('')
+const MAX_AMOUNT = 10000
+
+function submitCustom() {
+  const amount = Number.parseInt(customValue.value, 10)
+  if (!Number.isFinite(amount) || amount === 0) return
+  if (Math.abs(amount) > MAX_AMOUNT) return
+  emit('add-points', amount)
+  customValue.value = ''
+}
 
 const COLOR_VARS = {
   'os-300': '--color-group-a',
@@ -70,6 +83,26 @@ const groupColorSoft = `var(${colorVar}-soft)`
       >
         −10
       </button>
+
+      <form class="custom-form" @submit.prevent="submitCustom">
+        <label class="sr-only" :for="`custom-${group.id}`">
+          Valor personalizado para {{ group.name }}
+        </label>
+        <input
+          :id="`custom-${group.id}`"
+          v-model="customValue"
+          class="custom-input"
+          type="number"
+          inputmode="numeric"
+          :min="-MAX_AMOUNT"
+          :max="MAX_AMOUNT"
+          step="1"
+          placeholder="Outro valor (ex.: -25)"
+        />
+        <button class="btn btn--add" type="submit" :disabled="!customValue">
+          Aplicar
+        </button>
+      </form>
     </div>
   </article>
 </template>
@@ -177,5 +210,52 @@ const groupColorSoft = `var(${colorVar}-soft)`
 .btn--remove:hover {
   border-color: var(--color-muted);
   color: var(--color-foreground);
+}
+
+.custom-form {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+.custom-input {
+  min-height: 44px;
+  width: 180px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.custom-input:focus {
+  outline: 2px solid var(--group-color);
+  outline-offset: 1px;
+  border-color: var(--group-color);
+}
+
+.custom-input::placeholder {
+  color: var(--color-muted);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
