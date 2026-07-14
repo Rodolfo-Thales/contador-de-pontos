@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import br.com.advec.connect.mission.MissionService.MissionNotFoundException;
 import br.com.advec.connect.scoreboard.ScoreboardService.GroupNotFoundException;
 
 @RestControllerAdvice
@@ -15,6 +16,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(GroupNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(GroupNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
+
+    @ExceptionHandler(MissionNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(MissionNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
     }
 

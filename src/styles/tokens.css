@@ -3,26 +3,40 @@
    ============================================================ */
 :root {
   /* Cores gerais */
-  --color-background: #0f1117;
-  --color-surface: #181b24;
-  --color-surface-hover: #1f2330;
-  --color-border: #2a2f3d;
-  --color-foreground: #f3f4f8;
-  --color-muted: #9aa1b5;
+  --color-background: #0a0a14;
+  --color-surface: #12131a;
+  --color-surface-hover: #1a1c26;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-foreground: #f0f0f0;
+  --color-muted: #8a8f9e;
   --color-accent: #7c3aed;
   --color-accent-soft: rgba(124, 58, 237, 0.15);
+  --color-gold: #ffd700;
+  --color-success: #22c55e;
 
-  /* Grupo: Os 300 */
-  --color-group-a: #e11d48;
-  --color-group-a-soft: rgba(225, 29, 72, 0.12);
+  /* Grupo: Os 300 (laranja-fogo -> vermelho carmesim) */
+  --color-group-a: #dc143c;
+  --color-group-a-soft: rgba(220, 20, 60, 0.12);
+  --gradient-os-300: linear-gradient(135deg, #ff4500 0%, #dc143c 100%);
 
-  /* Grupo: Level Up */
-  --color-group-b: #2563eb;
-  --color-group-b-soft: rgba(37, 99, 235, 0.12);
+  /* Grupo: Level Up (azul elétrico) */
+  --color-group-b: #1e90ff;
+  --color-group-b-soft: rgba(30, 144, 255, 0.12);
+  --gradient-level-up: linear-gradient(135deg, #1e90ff 0%, #00bfff 100%);
+
+  /* Connect (laranja -> vermelho escarlate, usado nas logos do cabeçalho) */
+  --gradient-connect: linear-gradient(135deg, #ff6a00 0%, #dc143c 100%);
+  --color-connect-solid: #ff6a00;
+  --color-advec-tint: #a8b2c1;
+
+  /* Selos pequenos: fundo solido escuro (nao gradiente) para garantir contraste 4.5:1 com texto claro */
+  --color-badge-fill: #b01030;
+  --color-badge-ink: #1a1400;
 
   /* Tipografia */
   --font-display: 'Sora', sans-serif;
   --font-body: 'Inter', sans-serif;
+  --font-score: 'Oswald', sans-serif;
 
   /* Espaçamento (escala 4/8) */
   --space-1: 4px;
@@ -41,6 +55,6 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
 
   /* Movimento */
-  --transition-fast: 160ms ease-out;
+  --transition-fast: 200ms ease-out;
   --transition-base: 240ms ease-out;
 }

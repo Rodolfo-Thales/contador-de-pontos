@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppHeader from './components/AppHeader.vue'
+import HeroSection from './components/HeroSection.vue'
+import RecentHistorySection from './components/RecentHistorySection.vue'
+import QuestSection from './components/QuestSection.vue'
 import GroupCard from './components/GroupCard.vue'
 import ScoreHistory from './components/ScoreHistory.vue'
 import AdminLoginDialog from './components/AdminLoginDialog.vue'
@@ -56,7 +59,19 @@ async function handleReset() {
 </script>
 
 <template>
-  <AppHeader :admin="isAdmin" @login="loginOpen = true" @logout="logout" />
+  <AppHeader
+    :admin="isAdmin"
+    :groups="groups"
+    :leader-id="leaderId"
+    @login="loginOpen = true"
+    @logout="logout"
+  />
+
+  <HeroSection :groups="groups" :leader-id="leaderId" />
+
+  <RecentHistorySection v-if="!loading && !error" :history="history" />
+
+  <QuestSection :groups="groups" />
 
   <main class="main">
     <p v-if="loading" class="status">Carregando placar…</p>
@@ -69,7 +84,7 @@ async function handleReset() {
         {{ actionError }}
       </p>
 
-      <section class="scoreboard" aria-label="Placar dos grupos">
+      <section class="scoreboard" aria-label="Placar dos grupos (detalhado, com ações de admin)">
         <GroupCard
           v-if="groups[0]"
           :group="groups[0]"
