@@ -4,6 +4,7 @@ import AppHeader from './components/AppHeader.vue'
 import GroupCard from './components/GroupCard.vue'
 import ScoreHistory from './components/ScoreHistory.vue'
 import AdminLoginDialog from './components/AdminLoginDialog.vue'
+import GlobeLabels from './components/GlobeLabels.vue'
 import { useScoreboard } from './composables/useScoreboard'
 import { useAuth } from './composables/useAuth'
 
@@ -93,6 +94,11 @@ async function handleReset() {
   </main>
 
   <footer class="footer">
+    <GlobeLabels class="footer-globe" />
+    <blockquote class="footer-verse">
+      «Ide por todo o mundo e pregai o evangelho a toda criatura.»
+      <cite>Marcos 16:15</cite>
+    </blockquote>
     <p>Connect ADVEC — Departamento de Jovens</p>
   </footer>
 
@@ -140,10 +146,37 @@ async function handleReset() {
 
 .footer {
   text-align: center;
-  padding: var(--space-8) var(--space-4);
+  padding: var(--space-12) var(--space-4) var(--space-8);
   color: var(--color-muted);
   font-size: 0.875rem;
   border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  overflow: hidden;
+}
+
+.footer-globe {
+  width: min(380px, 78vw);
+}
+
+.footer-verse {
+  max-width: 42ch;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-foreground);
+  line-height: 1.6;
+}
+
+.footer-verse cite {
+  display: block;
+  margin-top: var(--space-2);
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 768px) {
