@@ -3,26 +3,44 @@
    ============================================================ */
 :root {
   /* Cores gerais */
-  --color-background: #0f1117;
-  --color-surface: #181b24;
-  --color-surface-hover: #1f2330;
-  --color-border: #2a2f3d;
-  --color-foreground: #f3f4f8;
-  --color-muted: #9aa1b5;
+  --color-background: #060610;
+  --color-surface: #0c0d18;
+  --color-surface-hover: #14161f;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-foreground: #f0f0f0;
+  --color-muted: #b0b5c8;
+  --color-muted-dim: #7a7f99;
   --color-accent: #7c3aed;
   --color-accent-soft: rgba(124, 58, 237, 0.15);
+  --color-gold: #d4a840;
+  --color-gold-bright: #f0c650;
+  --color-success: #34d27b;
 
-  /* Grupo: Os 300 */
-  --color-group-a: #e11d48;
-  --color-group-a-soft: rgba(225, 29, 72, 0.12);
+  /* Grupo: Os 300 (vermelho-tomate) */
+  --color-group-a: #e84330;
+  --color-group-a-soft: rgba(232, 67, 48, 0.12);
+  --gradient-os-300: linear-gradient(90deg, #e84330 0%, #ff6347 100%);
 
-  /* Grupo: Level Up */
-  --color-group-b: #2563eb;
-  --color-group-b-soft: rgba(37, 99, 235, 0.12);
+  /* Grupo: Level Up (azul elétrico) */
+  --color-group-b: #3b9eff;
+  --color-group-b-soft: rgba(59, 158, 255, 0.12);
+  --gradient-level-up: linear-gradient(90deg, #3b9eff 0%, #60b4ff 100%);
+
+  /* Connect (laranja -> vermelho, usado nas logos do cabeçalho) */
+  --gradient-connect: linear-gradient(135deg, #e8652a 0%, #c62828 100%);
+  --color-connect-solid: #e8652a;
+  --color-advec-tint: #a8b2c1;
+
+  /* Selos pequenos: fundo solido escuro (nao gradiente) para garantir contraste 4.5:1 com texto claro */
+  --color-badge-fill: #ba3626;
+  --color-badge-ink: #181300;
 
   /* Tipografia */
-  --font-display: 'Sora', sans-serif;
+  --font-display: 'Montserrat', sans-serif;
   --font-body: 'Inter', sans-serif;
+  --font-score: 'Montserrat', sans-serif;
+  --font-accent: 'Bebas Neue', sans-serif;
 
   /* Espaçamento (escala 4/8) */
   --space-1: 4px;
@@ -41,6 +59,6 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
 
   /* Movimento */
-  --transition-fast: 160ms ease-out;
+  --transition-fast: 200ms ease-out;
   --transition-base: 240ms ease-out;
 }

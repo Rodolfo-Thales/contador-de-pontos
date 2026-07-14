@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/api/scoreboard", "/api/auth/me", "/api/auth/csrf").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/scoreboard", "/api/missions", "/api/auth/me", "/api/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex

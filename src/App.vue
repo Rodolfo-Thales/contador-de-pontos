@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppHeader from './components/AppHeader.vue'
+import HeroSection from './components/HeroSection.vue'
+import RecentHistorySection from './components/RecentHistorySection.vue'
+import QuestSection from './components/QuestSection.vue'
 import GroupCard from './components/GroupCard.vue'
 import ScoreHistory from './components/ScoreHistory.vue'
 import AdminLoginDialog from './components/AdminLoginDialog.vue'
@@ -56,7 +59,23 @@ async function handleReset() {
 </script>
 
 <template>
-  <AppHeader :admin="isAdmin" @login="loginOpen = true" @logout="logout" />
+  <AppHeader
+    :admin="isAdmin"
+    :groups="groups"
+    :leader-id="leaderId"
+    @login="loginOpen = true"
+    @logout="logout"
+  />
+
+  <HeroSection :groups="groups" :leader-id="leaderId" />
+
+  <div class="section-transition"><span>Cada ponto conta</span></div>
+
+  <RecentHistorySection v-if="!loading && !error" :history="history" />
+
+  <div class="section-transition"><span>Missões ativas</span></div>
+
+  <QuestSection :groups="groups" />
 
   <main class="main">
     <p v-if="loading" class="status">Carregando placar…</p>
@@ -69,7 +88,7 @@ async function handleReset() {
         {{ actionError }}
       </p>
 
-      <section class="scoreboard" aria-label="Placar dos grupos">
+      <section class="scoreboard" aria-label="Placar dos grupos (detalhado, com ações de admin)">
         <GroupCard
           v-if="groups[0]"
           :group="groups[0]"
@@ -126,6 +145,44 @@ async function handleReset() {
   padding: var(--space-3);
   border: 1px solid rgba(248, 113, 113, 0.35);
   border-radius: var(--radius-sm);
+}
+
+.section-transition {
+  position: relative;
+  height: 90px;
+  background-color: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-transition span {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--color-muted-dim);
+}
+
+.section-transition span::before,
+.section-transition span::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: clamp(30px, 8vw, 80px);
+  height: 1px;
+}
+
+.section-transition span::before {
+  right: calc(100% + 16px);
+  background: linear-gradient(90deg, transparent, var(--color-border-strong));
+}
+
+.section-transition span::after {
+  left: calc(100% + 16px);
+  background: linear-gradient(90deg, var(--color-border-strong), transparent);
 }
 
 .scoreboard {
