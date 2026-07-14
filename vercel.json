@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://SEU-BACKEND-AQUI.onrender.com/api/:path*"
+      "destination": "https://contador-de-pontos-production.up.railway.app/api/:path*"
     }
   ]
 }
