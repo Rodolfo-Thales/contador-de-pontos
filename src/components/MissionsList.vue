@@ -1,16 +1,17 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { MISSIONS, useMissions } from '../composables/useMissions'
 import { useAuth } from '../composables/useAuth'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
+  revealed: { type: Boolean, default: false },
 })
 
 const TEAM_NAMES = { 'level-up': 'Level Up', 'os-300': 'Os 300' }
 const TEAM_IDS = ['level-up', 'os-300']
 
-const { completions, loading, error, refresh, isCompleted, setCompletion } = useMissions()
+const { loading, error, refresh, isCompleted, setCompletion } = useMissions()
 const { isAdmin } = useAuth()
 
 onMounted(refresh)
@@ -20,10 +21,6 @@ const actionError = ref(null)
 
 function teamName(groupId) {
   return props.groups.find((g) => g.id === groupId)?.name ?? TEAM_NAMES[groupId]
-}
-
-function bothCompleted(missionId) {
-  return TEAM_IDS.every((groupId) => isCompleted(missionId, groupId))
 }
 
 async function toggle(missionId, groupId) {
@@ -50,144 +47,66 @@ function progressPct(groupId) {
 </script>
 
 <template>
-  <div class="missions">
-    <div class="missions-header">
-      <h3 class="missions-title">Missões de Lançamento</h3>
-      <p class="missions-subtitle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-          <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-        </svg>
-        Cumpra primeiro e largue na frente!
-      </p>
-    </div>
+  <p v-if="loading" class="status">Carregando missões…</p>
+  <p v-else-if="error" class="status status--error" role="alert">
+    Não foi possível carregar as missões: {{ error }}
+  </p>
 
-    <p v-if="loading" class="status">Carregando missões…</p>
-    <p v-else-if="error" class="status status--error" role="alert">
-      Não foi possível carregar as missões: {{ error }}
-    </p>
+  <template v-else>
+    <p v-if="actionError" class="status status--error" role="alert">{{ actionError }}</p>
 
-    <template v-else>
-      <p v-if="actionError" class="status status--error" role="alert">{{ actionError }}</p>
-
-      <div class="missions-list">
-        <article
-          v-for="mission in MISSIONS"
-          :key="mission.id"
-          class="mission-card"
-          :class="{ 'mission-card--done': bothCompleted(mission.id) }"
-        >
-          <span class="mission-number">{{ mission.number }}</span>
-          <div class="mission-body">
-            <h4 class="mission-title">{{ mission.title }}</h4>
-            <p class="mission-desc">{{ mission.description }}</p>
-          </div>
-          <div class="mission-status">
+    <div class="mw">
+      <div v-for="mission in MISSIONS" :key="mission.id" class="mc rv" :class="{ v: revealed }">
+        <span class="mn">{{ mission.number }}</span>
+        <div class="mb">
+          <div class="mtl">{{ mission.title }}</div>
+          <div class="mds">{{ mission.description }}</div>
+          <div class="mss">
             <button
               v-for="groupId in TEAM_IDS"
               :key="groupId"
               type="button"
-              class="status-pill"
-              :class="{
-                'status-pill--done': isCompleted(mission.id, groupId),
-                'status-pill--clickable': isAdmin,
-              }"
+              class="ms"
+              :class="{ 'ms--clickable': isAdmin }"
               :disabled="!isAdmin || savingKey === mission.id + groupId"
               @click="toggle(mission.id, groupId)"
             >
-              <svg
-                v-if="isCompleted(mission.id, groupId)"
-                class="status-icon status-icon--done"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M8 12l3 3 5-6" />
-              </svg>
-              <svg
-                v-else
-                class="status-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-              {{ teamName(groupId) }}: {{ isCompleted(mission.id, groupId) ? 'Completa' : 'Pendente' }}
+              <span class="ck" :class="isCompleted(mission.id, groupId) ? 'y' : 'n'">
+                {{ isCompleted(mission.id, groupId) ? '✓' : '○' }}
+              </span>
+              <span :class="isCompleted(mission.id, groupId) ? 'sy' : 'sn'">
+                {{ teamName(groupId) }} — {{ isCompleted(mission.id, groupId) ? 'Completa' : 'Pendente' }}
+              </span>
             </button>
           </div>
-        </article>
+        </div>
       </div>
 
-      <div class="missions-progress">
-        <div v-for="groupId in TEAM_IDS" :key="groupId" class="progress-row">
-          <span class="progress-label">
-            {{ teamName(groupId) }}: {{ completedCount(groupId) }}/{{ MISSIONS.length }} missões completas
-          </span>
-          <div class="progress-bar">
+      <div class="pw rv" :class="{ v: revealed }">
+        <div v-for="groupId in TEAM_IDS" :key="groupId" class="pr">
+          <span class="pl" :class="groupId === 'level-up' ? 'pl--b' : 'pl--r'">{{ teamName(groupId) }}</span>
+          <div class="pt">
             <div
-              class="progress-fill"
-              :class="`progress-fill--${groupId}`"
+              class="pf"
+              :class="groupId === 'level-up' ? 'pf--b' : 'pf--r'"
               :style="{ width: progressPct(groupId) + '%' }"
             ></div>
           </div>
-          <span class="progress-pct">{{ progressPct(groupId) }}%</span>
-          <p v-if="completedCount(groupId) === MISSIONS.length" class="all-complete-badge">
-            <span class="sparkle" aria-hidden="true">✦</span>
-            Todas as missões completas!
-            <span class="sparkle" aria-hidden="true">✦</span>
-          </p>
+          <span class="pp">{{ completedCount(groupId) }}/{{ MISSIONS.length }}</span>
         </div>
+        <p v-for="groupId in TEAM_IDS" :key="`badge-${groupId}`" class="all-complete">
+          <template v-if="completedCount(groupId) === MISSIONS.length">
+            <span class="sparkle" aria-hidden="true">✦</span>
+            {{ teamName(groupId) }}: todas as missões completas!
+            <span class="sparkle" aria-hidden="true">✦</span>
+          </template>
+        </p>
       </div>
-    </template>
-  </div>
+    </div>
+  </template>
 </template>
 
 <style scoped>
-.missions {
-  max-width: 800px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.missions-header {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.missions-title {
-  font-size: 1.3rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.missions-subtitle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  color: var(--color-muted);
-}
-
-.missions-subtitle svg {
-  width: 18px;
-  height: 18px;
-  color: var(--color-gold);
-}
-
 .status {
   text-align: center;
   color: var(--color-muted);
@@ -201,178 +120,179 @@ function progressPct(groupId) {
   border-radius: var(--radius-sm);
 }
 
-.missions-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+.mw {
+  max-width: 780px;
+  margin: 0 auto;
 }
 
-.mission-card {
+.mc {
   display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  background-color: rgba(18, 19, 26, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  align-items: flex-start;
+  gap: 18px;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: var(--space-4) var(--space-6);
-  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  border-radius: 10px;
+  padding: 22px;
+  margin-bottom: 14px;
+  transition: all 0.25s;
 }
 
-.mission-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 0 20px rgba(255, 106, 0, 0.12);
+.mc.v:hover {
+  border-color: var(--color-border-strong);
 }
 
-.mission-card--done {
-  border-color: rgba(34, 197, 94, 0.35);
-  opacity: 0.92;
-}
-
-.mission-number {
-  font-family: var(--font-score);
-  font-size: 2rem;
-  font-weight: 800;
+.mn {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 900;
   color: var(--color-gold);
+  line-height: 1;
   flex-shrink: 0;
-  min-width: 48px;
+  min-width: 38px;
 }
 
-.mission-body {
+.mb {
   flex: 1;
   min-width: 0;
 }
 
-.mission-title {
-  font-weight: 700;
+.mtl {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  color: var(--color-foreground);
 }
 
-.mission-desc {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-}
-
-.mission-status {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-muted);
+.mds {
   font-size: 0.8rem;
-  white-space: nowrap;
-  cursor: default;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  color: var(--color-muted);
+  margin-bottom: 12px;
 }
 
-.status-pill--clickable {
+.mss {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ms {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+  font-family: var(--font-body);
+}
+
+.ms--clickable {
   cursor: pointer;
 }
 
-.status-pill--clickable:hover {
-  border-color: var(--color-muted);
-}
-
-.status-pill:disabled {
-  cursor: not-allowed;
-}
-
-.status-pill--done {
-  color: var(--color-success);
-  border-color: rgba(34, 197, 94, 0.4);
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
-}
-
-.status-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.status-icon--done {
-  animation: stamp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes stamp {
-  0% {
-    transform: scale(0);
-  }
-  60% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.missions-progress {
+.ck {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.progress-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: var(--space-2) var(--space-3);
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
-.progress-label {
-  grid-column: 1 / -1;
-  font-size: 0.875rem;
-  color: var(--color-muted);
+.ck.y {
+  background: rgba(52, 210, 123, 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(52, 210, 123, 0.25);
 }
 
-.progress-bar {
-  height: 10px;
-  border-radius: 5px;
-  background-color: var(--color-surface);
+.ck.n {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-muted-dim);
+  border: 1px solid var(--color-border);
+}
+
+.sy {
+  color: var(--color-success);
+}
+
+.sn {
+  color: var(--color-muted-dim);
+}
+
+.pw {
+  margin-top: 28px;
+}
+
+.pr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pl {
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 68px;
+  letter-spacing: 0.5px;
+}
+
+.pl--b {
+  color: var(--color-group-b);
+}
+
+.pl--r {
+  color: var(--color-group-a);
+}
+
+.pt {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
   overflow: hidden;
 }
 
-.progress-fill {
+.pf {
   height: 100%;
-  transition: width 0.6s ease;
+  border-radius: 3px;
+  transition: width 1s ease;
 }
 
-.progress-fill--level-up {
+.pf--b {
   background: var(--gradient-level-up);
 }
 
-.progress-fill--os-300 {
-  background: var(--gradient-os-300);
+.pf--r {
+  background: linear-gradient(90deg, #6b1010, var(--color-group-a));
 }
 
-.progress-pct {
-  font-variant-numeric: tabular-nums;
+.pp {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
   font-weight: 700;
-  font-size: 0.875rem;
+  min-width: 30px;
+  text-align: right;
+  color: var(--color-muted);
 }
 
-.all-complete-badge {
-  grid-column: 1 / -1;
+.all-complete {
   text-align: center;
-  padding: var(--space-2);
-  border: 1px solid var(--color-gold);
-  border-radius: var(--radius-sm);
+  margin-top: var(--space-2);
   color: var(--color-gold);
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  font-size: 0.8rem;
+  letter-spacing: 0.5px;
 }
 
 .sparkle {
@@ -396,15 +316,26 @@ function progressPct(groupId) {
   }
 }
 
+.rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.rv.v {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (max-width: 600px) {
-  .mission-card {
+  .mc {
     flex-direction: column;
-    align-items: flex-start;
-    padding: var(--space-4);
+    gap: 10px;
   }
 
-  .mission-status {
-    width: 100%;
+  .mss {
+    flex-direction: column;
+    gap: 6px;
   }
 }
 </style>

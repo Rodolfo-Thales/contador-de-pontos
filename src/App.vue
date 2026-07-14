@@ -69,7 +69,11 @@ async function handleReset() {
 
   <HeroSection :groups="groups" :leader-id="leaderId" />
 
+  <div class="section-transition"><span>Cada ponto conta</span></div>
+
   <RecentHistorySection v-if="!loading && !error" :history="history" />
+
+  <div class="section-transition"><span>Missões ativas</span></div>
 
   <QuestSection :groups="groups" />
 
@@ -141,6 +145,44 @@ async function handleReset() {
   padding: var(--space-3);
   border: 1px solid rgba(248, 113, 113, 0.35);
   border-radius: var(--radius-sm);
+}
+
+.section-transition {
+  position: relative;
+  height: 90px;
+  background-color: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-transition span {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--color-muted-dim);
+}
+
+.section-transition span::before,
+.section-transition span::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: clamp(30px, 8vw, 80px);
+  height: 1px;
+}
+
+.section-transition span::before {
+  right: calc(100% + 16px);
+  background: linear-gradient(90deg, transparent, var(--color-border-strong));
+}
+
+.section-transition span::after {
+  left: calc(100% + 16px);
+  background: linear-gradient(90deg, var(--color-border-strong), transparent);
 }
 
 .scoreboard {

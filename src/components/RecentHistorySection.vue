@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useRevealOnScroll } from '../composables/useRevealOnScroll'
 
 const props = defineProps({
   history: { type: Array, required: true },
@@ -33,31 +34,36 @@ function formatDateShort(iso) {
 }
 
 const recent = computed(() => props.history.slice(0, 10))
+
+const { targetRef, revealed } = useRevealOnScroll()
 </script>
 
 <template>
-  <section class="history-section" aria-label="Últimas pontuações">
-    <div class="history-card">
-      <h2 class="title">
+  <section ref="targetRef" class="sect" aria-label="Últimas pontuações">
+    <h2 class="st rv" :class="{ v: revealed }">Últimas Pontuações</h2>
+    <p class="ss rv" :class="{ v: revealed }">Acompanhe cada movimentação da gincana</p>
+
+    <div class="hc rv" :class="{ v: revealed }">
+      <div class="hc-h">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="9" />
           <path d="M12 7v5l3 3" />
         </svg>
-        Últimas Pontuações
-      </h2>
+        Histórico
+      </div>
 
       <p v-if="!recent.length" class="empty">Nenhuma pontuação registrada ainda.</p>
 
       <TransitionGroup v-else tag="ul" name="row" class="entries">
-        <li v-for="(entry, i) in recent" :key="entry.id" class="entry" :class="{ 'entry--odd': i % 2 === 1 }">
-          <span class="entry-dot" :style="{ backgroundColor: colorVarFor(entry) }" aria-hidden="true"></span>
-          <span class="entry-group">{{ entry.groupName }}</span>
-          <span class="entry-action">{{ actionLabel(entry) }}</span>
-          <span class="entry-amount" :class="entry.amount > 0 ? 'positive' : 'negative'">
+        <li v-for="entry in recent" :key="entry.id" class="hr">
+          <span class="hrd" :style="{ backgroundColor: colorVarFor(entry) }" aria-hidden="true"></span>
+          <span class="hrt" :style="{ color: colorVarFor(entry) }">{{ entry.groupName }}</span>
+          <span class="hra">{{ actionLabel(entry) }}</span>
+          <span class="hrp" :class="entry.amount > 0 ? 'positive' : 'negative'">
             {{ entry.amount > 0 ? '+' : '' }}{{ entry.amount }}
           </span>
-          <time class="entry-time entry-time--full" :datetime="entry.createdAt">{{ formatDate(entry.createdAt) }}</time>
-          <time class="entry-time entry-time--short" :datetime="entry.createdAt">{{ formatDateShort(entry.createdAt) }}</time>
+          <time class="hrdt hrdt--full" :datetime="entry.createdAt">{{ formatDate(entry.createdAt) }}</time>
+          <time class="hrdt hrdt--short" :datetime="entry.createdAt">{{ formatDateShort(entry.createdAt) }}</time>
         </li>
       </TransitionGroup>
     </div>
@@ -65,33 +71,67 @@ const recent = computed(() => props.history.slice(0, 10))
 </template>
 
 <style scoped>
-.history-section {
-  padding: var(--space-8) var(--space-4);
+.sect {
+  padding: 70px 20px;
+  background-color: var(--color-background);
 }
 
-.history-card {
-  max-width: 800px;
+.st {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 6px;
+  color: var(--color-foreground);
+}
+
+.ss {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--color-muted);
+  margin-bottom: 44px;
+}
+
+.rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.rv.v {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hc {
+  max-width: 780px;
   margin: 0 auto;
-  background-color: rgba(18, 19, 26, 0.8);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: var(--space-6);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.title {
+.hc-h {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: 1.1rem;
-  font-weight: 800;
+  gap: 8px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--space-4);
+  color: var(--color-muted);
 }
 
-.title svg {
-  width: 20px;
-  height: 20px;
+.hc-h svg {
+  width: 16px;
+  height: 16px;
   color: var(--color-gold);
 }
 
@@ -103,68 +143,70 @@ const recent = computed(() => props.history.slice(0, 10))
 
 .entries {
   list-style: none;
-  max-height: 440px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
 }
 
-.entry {
+.hr {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  padding: 13px 22px;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  transition: background 0.15s;
 }
 
-.entry--odd {
-  background-color: rgba(255, 255, 255, 0.02);
+.hr:hover {
+  background: rgba(255, 255, 255, 0.015);
 }
 
-.entry:last-child {
+.hr:last-child {
   border-bottom: none;
 }
 
-.entry-dot {
-  width: 10px;
-  height: 10px;
+.hrd {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.entry-group {
-  font-weight: 600;
+.hrt {
+  font-weight: 700;
+  font-size: 0.8rem;
+  min-width: 72px;
   flex-shrink: 0;
 }
 
-.entry-action {
-  color: var(--color-muted);
+.hra {
   flex: 1;
   min-width: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.entry-amount {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
+.hrp {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--color-success);
   flex-shrink: 0;
 }
 
-.entry-amount.positive {
-  color: var(--color-success);
-}
-
-.entry-amount.negative {
+.hrp.negative {
   color: #f87171;
 }
 
-.entry-time {
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
+.hrdt {
+  font-size: 0.7rem;
+  color: var(--color-muted-dim);
+  white-space: nowrap;
   flex-shrink: 0;
+}
+
+.hrdt--short {
+  display: none;
 }
 
 .row-enter-active {
@@ -176,22 +218,17 @@ const recent = computed(() => props.history.slice(0, 10))
   transform: translateX(-24px);
 }
 
-.entry-time--short {
-  display: none;
-}
-
 @media (max-width: 600px) {
-  .entry-action {
+  .hra {
     display: none;
   }
 
-  .entry-time--full {
+  .hrdt--full {
     display: none;
   }
 
-  .entry-time--short {
+  .hrdt--short {
     display: inline;
-    font-size: 0.75rem;
   }
 }
 </style>

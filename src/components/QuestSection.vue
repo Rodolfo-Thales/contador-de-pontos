@@ -7,84 +7,61 @@ defineProps({
   groups: { type: Array, default: () => [] },
 })
 
-const { targetRef, revealed } = useRevealOnScroll()
+const { targetRef: questsRef, revealed: questsRevealed } = useRevealOnScroll()
+const { targetRef: missionsRef, revealed: missionsRevealed } = useRevealOnScroll()
 </script>
 
 <template>
-  <section ref="targetRef" class="quest-section" :class="{ 'quest-section--revealed': revealed }" aria-label="Sistema de quests">
-    <div class="quest-header">
-      <h2 class="quest-heading">Sistema de Quests</h2>
-      <p class="quest-subheading">Complete missões, acumule pontos, conquiste a vitória</p>
-    </div>
+  <section ref="questsRef" class="sect" aria-label="Sistema de quests">
+    <h2 class="st rv" :class="{ v: questsRevealed }">Sistema de Quests</h2>
+    <p class="ss rv" :class="{ v: questsRevealed }">
+      Complete missões, acumule pontos, conquiste a vitória
+    </p>
+    <QuestCards :revealed="questsRevealed" />
+  </section>
 
-    <QuestCards />
-
-    <MissionsList :groups="groups" />
+  <section ref="missionsRef" class="sect" aria-label="Missões de lançamento">
+    <h2 class="st rv" :class="{ v: missionsRevealed }">Missões de Lançamento</h2>
+    <p class="ss rv" :class="{ v: missionsRevealed }">
+      Cumpra primeiro e largue na frente com pontos extras
+    </p>
+    <MissionsList :groups="groups" :revealed="missionsRevealed" />
   </section>
 </template>
 
 <style scoped>
-.quest-section {
-  position: relative;
+.sect {
+  padding: 70px 20px;
   background-color: var(--color-background);
-  padding: var(--space-16) var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
-.quest-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
-  background-size: 3px 3px;
-  z-index: 0;
-}
-
-.quest-header,
-.quest-section > :deep(.quest-grid),
-.quest-section > :deep(.missions) {
-  position: relative;
-  z-index: 1;
-}
-
-.quest-header {
+.st {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  margin-bottom: 6px;
+  color: var(--color-foreground);
 }
 
-.quest-section--revealed .quest-header {
+.ss {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--color-muted);
+  margin-bottom: 44px;
+}
+
+.rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.rv.v {
   opacity: 1;
   transform: translateY(0);
-}
-
-.quest-heading {
-  font-size: 2.2rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.quest-subheading {
-  color: var(--color-muted);
-  font-size: 1.05rem;
-}
-
-.quest-section :deep(.quest-card) {
-  animation-play-state: paused;
-}
-
-.quest-section--revealed :deep(.quest-card) {
-  animation-play-state: running;
 }
 </style>

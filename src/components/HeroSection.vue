@@ -3,13 +3,14 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import CountdownTimer from './CountdownTimer.vue'
 import { useCountUp } from '../composables/useCountUp'
 import levelUpLogo from '../assets/logos/level-up-hero.png'
-
-const heroBannerUrl = '/hero-banner.jpg'
+import os300Logo from '../assets/logos/os300-hero.jpg'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   leaderId: { type: String, default: null },
 })
+
+const heroBannerUrl = '/hero-banner.jpg'
 
 function pointsFor(id) {
   return props.groups.find((g) => g.id === id)?.points ?? 0
@@ -43,29 +44,25 @@ function isTrailing(id) {
 }
 
 function showCrown(id) {
-  return isLeader(id) && (category.value === 'normal' || category.value === 'blowout')
+  return isLeader(id) && category.value !== 'close'
 }
 
 function badgeFor(id) {
   if (!showCrown(id)) return null
-  return category.value === 'blowout' ? 'DOMINANDO!' : 'LIDERANDO'
+  return category.value === 'blowout' ? 'Dominando' : 'Liderando'
 }
 
-const centerBadgeText = computed(() => {
-  if (category.value === 'tie') return 'EMPATADOS!'
-  if (category.value === 'close') return 'DISPUTA ACIRRADA!'
-  return null
+const diffBadgeText = computed(() => {
+  if (category.value === 'tie') return 'Empatados!'
+  if (category.value === 'close') return 'Disputa acirrada!'
+  return `+${diff.value.toLocaleString('pt-BR')} à frente`
 })
-
-const blowoutText = computed(() =>
-  category.value === 'blowout' ? `+${diff.value.toLocaleString('pt-BR')} pontos na frente` : null,
-)
 
 function cardClasses(id) {
   return {
-    'team-card--leader': showCrown(id),
-    'team-card--trailing': isTrailing(id) && category.value === 'blowout',
-    'team-card--close-pulse': category.value === 'close',
+    winner: showCrown(id),
+    'team-side--trailing': isTrailing(id) && category.value === 'blowout',
+    'team-side--close': category.value === 'close',
   }
 }
 
@@ -87,8 +84,111 @@ function onScroll() {
   })
 }
 
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+// Sistema de particulas: azul flutuando a esquerda, vermelho a direita.
+const canvasRef = ref(null)
+let ctx, particles, w, h, animationId, resizeObserver
+
+class Particle {
+  constructor() {
+    this.reset()
+  }
+
+  reset() {
+    this.side = Math.random() < 0.5 ? 'left' : 'right'
+    if (this.side === 'left') {
+      this.x = Math.random() * (w * 0.4)
+      this.color = [59, 158, 255]
+    } else {
+      this.x = w * 0.6 + Math.random() * (w * 0.4)
+      this.color = [232, 67, 48]
+    }
+    this.y = h + Math.random() * 40
+    this.r = Math.random() * 2.2 + 0.6
+    this.vy = -(Math.random() * 1.2 + 0.3)
+    this.vx = (Math.random() - 0.5) * 0.4
+    this.alpha = Math.random() * 0.5 + 0.15
+    this.maxAlpha = this.alpha
+    this.life = 0
+    this.maxLife = Math.random() * 250 + 150
+    this.shimmer = Math.random() * Math.PI * 2
+    this.shimmerSpeed = Math.random() * 0.03 + 0.01
+  }
+
+  update() {
+    this.life++
+    this.x += this.vx
+    this.y += this.vy
+    this.shimmer += this.shimmerSpeed
+    const lifeRatio = this.life / this.maxLife
+    if (lifeRatio < 0.2) {
+      this.alpha = this.maxAlpha * (lifeRatio / 0.2)
+    } else if (lifeRatio > 0.7) {
+      this.alpha = this.maxAlpha * (1 - (lifeRatio - 0.7) / 0.3)
+    }
+    if (this.life >= this.maxLife || this.y < -20) this.reset()
+  }
+
+  draw() {
+    const a = Math.max(0, this.alpha + Math.sin(this.shimmer) * 0.15)
+    const [r, g, b] = this.color
+    ctx.beginPath()
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
+    ctx.fillStyle = `rgba(${r},${g},${b},${a.toFixed(3)})`
+    ctx.fill()
+    if (this.r > 1.4) {
+      ctx.beginPath()
+      ctx.arc(this.x, this.y, this.r * 3, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(${r},${g},${b},${(a * 0.12).toFixed(3)})`
+      ctx.fill()
+    }
+  }
+}
+
+function setupParticles() {
+  const canvas = canvasRef.value
+  ctx = canvas.getContext('2d')
+  w = canvas.width = canvas.offsetWidth
+  h = canvas.height = canvas.offsetHeight
+
+  const count = Math.min(90, Math.floor((w * h) / 12000))
+  particles = Array.from({ length: count }, () => {
+    const p = new Particle()
+    p.life = Math.floor(Math.random() * p.maxLife)
+    p.y = Math.random() * h
+    return p
+  })
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h)
+    for (const p of particles) {
+      p.update()
+      p.draw()
+    }
+    animationId = requestAnimationFrame(animate)
+  }
+  animate()
+}
+
+function handleResize() {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  w = canvas.width = canvas.offsetWidth
+  h = canvas.height = canvas.offsetHeight
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  if (!reduceMotion) {
+    setupParticles()
+    window.addEventListener('resize', handleResize)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', handleResize)
+  cancelAnimationFrame(animationId)
+})
 </script>
 
 <template>
@@ -102,59 +202,64 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
       :style="{ transform: `translateY(${bgOffset}px)` }"
     />
     <div class="hero-overlay"></div>
-    <div class="hero-glow" aria-hidden="true"></div>
-    <div class="hero-grain" aria-hidden="true"></div>
+    <canvas ref="canvasRef" class="hero-particles" aria-hidden="true"></canvas>
 
     <div class="hero-content">
+      <p class="hero-tagline">Somente um será lendário. O resto será história.</p>
+
       <div class="hero-countdown">
         <CountdownTimer />
       </div>
 
       <div class="hero-scoreboard">
-        <article class="team-card team-card--level-up" :class="cardClasses('level-up')">
+        <div class="team-side team-side--level-up" :class="cardClasses('level-up')">
           <svg v-if="showCrown('level-up')" class="crown" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm14 3a1 1 0 01-1 1H6a1 1 0 01-1-1v-1h14v1z" />
           </svg>
           <span v-if="badgeFor('level-up')" class="team-badge">{{ badgeFor('level-up') }}</span>
-          <img :src="levelUpLogo" alt="Level Up" class="team-logo" loading="eager" />
+          <div class="team-logo team-logo--blue">
+            <img :src="levelUpLogo" alt="Level Up" loading="eager" />
+          </div>
           <p class="team-name team-name--level-up">Level Up</p>
           <p class="team-score team-score--level-up">{{ formatScore(levelUpDisplay) }}</p>
-        </article>
-
-        <div class="vs-central">
-          <span class="vs-divider" aria-hidden="true"></span>
-          <span class="vs-text">VS</span>
-          <span class="vs-divider" aria-hidden="true"></span>
-          <p v-if="centerBadgeText" class="center-badge" :class="`center-badge--${category}`">
-            {{ centerBadgeText }}
-          </p>
-          <p v-if="blowoutText" class="blowout-text">{{ blowoutText }}</p>
+          <p class="team-score-label">Pontos</p>
+          <p class="team-motto">Crescer · Superar · Impactar</p>
         </div>
 
-        <article class="team-card team-card--os-300" :class="cardClasses('os-300')">
+        <div class="vs-central">
+          <div class="vs-diamond">
+            <span>VS</span>
+          </div>
+          <p class="diff-badge" :class="`diff-badge--${category}`">{{ diffBadgeText }}</p>
+        </div>
+
+        <div class="team-side team-side--os-300" :class="cardClasses('os-300')">
           <svg v-if="showCrown('os-300')" class="crown" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm14 3a1 1 0 01-1 1H6a1 1 0 01-1-1v-1h14v1z" />
           </svg>
           <span v-if="badgeFor('os-300')" class="team-badge">{{ badgeFor('os-300') }}</span>
-          <div class="os300-badge" aria-hidden="true">
-            <span class="os300-number">300</span>
+          <div class="team-logo team-logo--red">
+            <img :src="os300Logo" alt="Os 300" loading="eager" />
           </div>
           <p class="team-name team-name--os-300">Os 300</p>
           <p class="team-score team-score--os-300">{{ formatScore(os300Display) }}</p>
-        </article>
+          <p class="team-score-label">Pontos</p>
+          <p class="team-motto">Unidos · Fortes · Fiéis</p>
+        </div>
       </div>
 
       <div class="tug-of-war">
+        <div class="tug-labels">
+          <span class="tug-label tug-label--level-up">Level Up — {{ levelUpPct.toFixed(0) }}%</span>
+          <span class="tug-label tug-label--os-300">Os 300 — {{ os300Pct.toFixed(0) }}%</span>
+        </div>
         <div class="tug-bar">
           <div class="tug-fill tug-fill--level-up" :style="{ width: levelUpPct + '%' }"></div>
-          <div class="tug-fill tug-fill--os-300" :style="{ width: os300Pct + '%' }"></div>
           <div class="tug-marker" aria-hidden="true"></div>
         </div>
-        <div class="tug-labels">
-          <span>{{ levelUpPct.toFixed(0) }}%</span>
-          <span>{{ os300Pct.toFixed(0) }}%</span>
-        </div>
       </div>
+
+      <p class="hero-subtagline">Não é sobre quem começa. É sobre quem persiste.</p>
     </div>
   </section>
 </template>
@@ -162,15 +267,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 <style scoped>
 .hero {
   position: relative;
-  scroll-margin-top: 56px;
-  min-height: 700px;
-  height: 100vh;
+  scroll-margin-top: 66px;
+  width: 100%;
+  min-height: 100vh;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
   isolation: isolate;
-  /* Fallback visivel enquanto a imagem carrega (ou se faltar) */
+  padding-top: 80px;
+  padding-bottom: 40px;
   background: linear-gradient(160deg, #1a0f08 0%, #0a0a14 55%, #14060a 100%);
 }
 
@@ -189,79 +296,68 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    to bottom,
-    rgba(10, 10, 20, 0.7) 0%,
-    rgba(10, 10, 20, 0.3) 45%,
-    rgba(10, 10, 20, 0.95) 100%
+    180deg,
+    rgba(6, 6, 16, 0.55) 0%,
+    rgba(6, 6, 16, 0.15) 22%,
+    rgba(6, 6, 16, 0.08) 42%,
+    rgba(6, 6, 16, 0.25) 62%,
+    rgba(6, 6, 16, 0.85) 84%,
+    rgba(6, 6, 16, 1) 100%
   );
   z-index: -2;
 }
 
-.hero-glow {
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  width: 600px;
-  height: 600px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.16) 0%, rgba(255, 215, 0, 0) 70%);
-  animation: glow-pulse 3s ease-in-out infinite;
-  z-index: -1;
-  pointer-events: none;
-}
-
-@keyframes glow-pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.hero-grain {
+.hero-particles {
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.05;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px);
-  background-size: 3px 3px;
-  animation: grain-drift 20s linear infinite;
-}
-
-@keyframes grain-drift {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 120px 80px;
-  }
+  width: 100%;
+  height: 100%;
 }
 
 .hero-content {
   position: relative;
+  z-index: 2;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1160px;
   margin: 0 auto;
-  padding: var(--space-8) var(--space-4) var(--space-12);
+  padding: 0 var(--space-4);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-12);
+  gap: var(--space-6);
+}
+
+.hero-tagline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--color-gold-bright);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 168, 64, 0.2);
+  text-align: center;
+  animation: fade-in 1s ease 0.2s both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .hero-countdown {
-  animation: fade-slide-down 0.6s ease both;
-  animation-delay: 0.2s;
+  animation: fade-slide-down 0.6s ease 0.3s both;
 }
 
 @keyframes fade-slide-down {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -271,18 +367,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 .hero-scoreboard {
   width: 100%;
+  max-width: 980px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-8);
-  animation: fade-scale-in 0.6s ease both;
-  animation-delay: 0.4s;
+  animation: fade-scale-in 0.7s ease 0.5s both;
 }
 
 @keyframes fade-scale-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.94);
   }
   to {
     opacity: 1;
@@ -290,120 +385,142 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   }
 }
 
-.team-card {
-  position: relative;
+.team-side {
   flex: 1;
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-8) var(--space-6);
-  border-radius: 12px;
-  background-color: rgba(10, 10, 20, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: opacity var(--transition-base), box-shadow var(--transition-base);
+  position: relative;
+  text-align: center;
+  padding: var(--space-4) var(--space-6);
+  transition: opacity var(--transition-base);
 }
 
-.team-card--leader.team-card--level-up {
-  box-shadow: 0 0 20px rgba(30, 144, 255, 0.3);
-  border-color: rgba(30, 144, 255, 0.4);
+.team-side.winner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
 }
 
-.team-card--leader.team-card--os-300 {
-  box-shadow: 0 0 20px rgba(220, 20, 60, 0.3);
-  border-color: rgba(220, 20, 60, 0.4);
+.team-side--level-up.winner::before {
+  background: radial-gradient(ellipse 70% 80% at 50% 40%, rgba(59, 158, 255, 0.18), transparent 65%);
 }
 
-.team-card--leader.team-card--level-up.team-card--trailing,
-.team-card--leader.team-card--os-300.team-card--trailing {
-  /* dominando: glow ainda mais intenso no lider */
-  box-shadow: 0 0 32px 4px rgba(255, 215, 0, 0.25);
+.team-side--os-300.winner::before {
+  background: radial-gradient(ellipse 70% 80% at 50% 40%, rgba(232, 67, 48, 0.18), transparent 65%);
 }
 
-.team-card--trailing:not(.team-card--leader) {
+.team-side--trailing:not(.winner) {
   opacity: 0.65;
 }
 
-.team-card--close-pulse {
-  animation: card-pulse 1.6s ease-in-out infinite;
+.team-side--close .team-logo {
+  animation: logo-pulse 1.6s ease-in-out infinite;
 }
 
-@keyframes card-pulse {
+@keyframes logo-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 rgba(255, 215, 0, 0);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   }
   50% {
-    box-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(212, 168, 64, 0.4);
   }
 }
 
 .crown {
   position: absolute;
-  top: -22px;
-  width: 28px;
-  height: 28px;
-  color: var(--color-gold);
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
-  animation: crown-glow 2s ease-in-out infinite;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  color: var(--color-gold-bright);
+  z-index: 10;
+  filter: drop-shadow(0 4px 15px rgba(212, 168, 64, 0.5));
+  animation: crown-float 3s ease-in-out infinite;
 }
 
-@keyframes crown-glow {
+@keyframes crown-float {
   0%,
   100% {
-    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+    transform: translateX(-50%) translateY(0) rotate(-3deg);
   }
   50% {
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.9));
+    transform: translateX(-50%) translateY(-5px) rotate(3deg);
   }
 }
 
 .team-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--space-3);
-  border-radius: 999px;
-  background-color: var(--color-gold);
-  color: var(--color-badge-ink);
-  font-size: 0.7rem;
+  font-family: var(--font-display);
+  font-size: 0.55rem;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 2px;
   text-transform: uppercase;
+  padding: 4px 16px;
+  border-radius: 3px;
+  margin-bottom: var(--space-3);
+  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-bright));
+  color: var(--color-badge-ink);
+  box-shadow: 0 2px 20px rgba(212, 168, 64, 0.3);
+  animation: badge-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes badge-glow {
+  0%,
+  100% {
+    box-shadow: 0 2px 20px rgba(212, 168, 64, 0.25);
+  }
+  50% {
+    box-shadow: 0 2px 30px rgba(212, 168, 64, 0.45);
+  }
 }
 
 .team-logo {
-  height: 160px;
-  width: auto;
-  border-radius: 8px;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto var(--space-3);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
-.os300-badge {
-  height: 160px;
-  width: 160px;
-  display: grid;
-  place-items: center;
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-  background: #8b0000;
-  border: 3px solid #daa520;
+.team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.os300-number {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: 700;
-  font-size: 2.5rem;
-  color: #f0e6c8;
+.team-logo--blue {
+  border-color: rgba(59, 158, 255, 0.25);
+}
+
+.team-logo--red {
+  border-color: rgba(232, 67, 48, 0.25);
+}
+
+.winner .team-logo--blue {
+  border-color: rgba(59, 158, 255, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 158, 255, 0.25);
+}
+
+.winner .team-logo--red {
+  border-color: rgba(232, 67, 48, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 30px rgba(232, 67, 48, 0.25);
 }
 
 .team-name {
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
   font-weight: 800;
-  font-size: 1.25rem;
-  letter-spacing: 1px;
-  /* Garante legibilidade sobre a foto do banner, independente do que estiver atras */
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 0, 0, 0.6);
 }
 
 .team-name--level-up {
@@ -416,190 +533,195 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 .team-score {
   font-family: var(--font-score);
-  font-weight: 800;
-  font-size: 4rem;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-size: 3.4rem;
+  font-weight: 900;
+  line-height: 1.05;
+  color: var(--color-foreground);
 }
 
 .team-score--level-up {
-  background: var(--gradient-level-up);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  text-shadow: 0 0 40px rgba(59, 158, 255, 0.5), 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .team-score--os-300 {
-  background: var(--gradient-os-300);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  text-shadow: 0 0 40px rgba(232, 67, 48, 0.5), 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.team-score-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-top: 2px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.team-motto {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-top: var(--space-3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
 .vs-central {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  flex-shrink: 0;
+  margin: 0 calc(-1 * var(--space-4));
 }
 
-.vs-divider {
-  width: 2px;
-  height: 24px;
-  background: linear-gradient(to bottom, transparent, var(--color-gold), transparent);
+.vs-diamond {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  background: linear-gradient(135deg, #1a1408, #0d0a04);
+  transform: rotate(45deg);
+  border: 2px solid var(--color-gold);
+  box-shadow: 0 0 30px rgba(212, 168, 64, 0.35), inset 0 0 20px rgba(212, 168, 64, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: diamond-glow 3s ease-in-out infinite;
 }
 
-.vs-text {
-  font-family: var(--font-display);
-  font-weight: 800;
+@keyframes diamond-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 25px rgba(212, 168, 64, 0.3), inset 0 0 20px rgba(212, 168, 64, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(212, 168, 64, 0.5), inset 0 0 25px rgba(212, 168, 64, 0.15);
+  }
+}
+
+.vs-diamond span {
+  transform: rotate(-45deg);
+  font-family: var(--font-accent);
   font-size: 1.5rem;
-  color: var(--color-gold);
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-  animation: vs-pulse 2s ease-in-out infinite;
+  letter-spacing: 2px;
+  color: var(--color-gold-bright);
+  text-shadow: 0 0 15px rgba(212, 168, 64, 0.5);
 }
 
-@keyframes vs-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-.center-badge {
-  white-space: nowrap;
-  font-size: 0.8rem;
+.diff-badge {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: var(--space-1) var(--space-3);
-  border-radius: 999px;
-}
-
-.center-badge--close {
   color: var(--color-badge-ink);
-  background-color: var(--color-gold);
-  animation: badge-pulse 1.2s ease-in-out infinite;
-}
-
-.center-badge--tie {
-  color: var(--color-foreground);
-  background-color: var(--color-surface-hover);
-  border: 1px solid var(--color-gold);
-}
-
-@keyframes badge-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.blowout-text {
-  font-size: 0.75rem;
-  color: var(--color-gold);
-  font-weight: 600;
+  padding: 5px 14px;
+  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-bright));
+  border-radius: 3px;
   white-space: nowrap;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 20px rgba(212, 168, 64, 0.35);
 }
 
 .tug-of-war {
   width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  animation: grow-from-center 0.6s ease both;
-  animation-delay: 0.6s;
+  max-width: 560px;
+  animation: fade-slide-down 0.8s ease 0.9s both;
 }
 
-@keyframes grow-from-center {
-  from {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-  to {
-    opacity: 1;
-    transform: scaleX(1);
-  }
+.tug-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tug-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.tug-label--level-up {
+  color: var(--color-group-b);
+}
+
+.tug-label--os-300 {
+  color: var(--color-group-a);
 }
 
 .tug-bar {
   position: relative;
-  height: 8px;
-  border-radius: 4px;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
-  display: flex;
-  background-color: var(--color-surface);
 }
 
 .tug-fill {
   height: 100%;
-  transition: width 1s ease;
+  border-radius: 3px 0 0 3px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(59, 158, 255, 0.4);
 }
 
 .tug-fill--level-up {
   background: var(--gradient-level-up);
 }
 
-.tug-fill--os-300 {
-  background: var(--gradient-os-300);
-}
-
 .tug-marker {
   position: absolute;
-  top: 0;
   left: 50%;
-  width: 2px;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.7);
+  top: -2px;
+  width: 1px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
-.tug-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
+.hero-subtagline {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  animation: fade-in 1s ease 1.2s both;
 }
 
 @media (max-width: 768px) {
+  .hero {
+    min-height: auto;
+    padding: 74px 12px 50px;
+  }
+
   .hero-scoreboard {
     flex-direction: column;
+    gap: var(--space-6);
   }
 
-  .team-card {
-    max-width: none;
-    width: 100%;
-  }
-
-  .team-logo,
-  .os300-badge {
-    height: 80px;
-    width: 80px;
-  }
-
-  .os300-number {
-    font-size: 1.5rem;
-  }
-
-  .team-score {
-    font-size: 2.5rem;
+  .team-side {
+    padding: var(--space-2) var(--space-4);
   }
 
   .vs-central {
     flex-direction: row;
-    gap: var(--space-3);
+    margin: 0;
+    gap: var(--space-4);
   }
 
-  .vs-divider {
-    width: 24px;
-    height: 2px;
+  .team-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .team-score {
+    font-size: 2.6rem;
   }
 }
 </style>
