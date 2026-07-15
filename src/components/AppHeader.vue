@@ -29,11 +29,11 @@ function scrollToScoreboard() {
 
 <template>
   <header class="header">
-    <a href="/" class="h-logos" aria-label="Connect ADVEC — início">
+    <a href="/" class="h-logos" aria-label="Connect ADVEC MORENO — início">
       <div class="h-icon"></div>
       <div class="h-txts">
         <div class="h-main">CONNECT</div>
-        <div class="h-sub">ADVEC</div>
+        <div class="h-sub">ADVEC MORENO</div>
       </div>
     </a>
 
