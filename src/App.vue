@@ -8,8 +8,11 @@ import GroupCard from './components/GroupCard.vue'
 import ScoreHistory from './components/ScoreHistory.vue'
 import AdminLoginDialog from './components/AdminLoginDialog.vue'
 import GlobeLabels from './components/GlobeLabels.vue'
+import SchedulePage from './components/SchedulePage.vue'
 import { useScoreboard } from './composables/useScoreboard'
 import { useAuth } from './composables/useAuth'
+
+const isCronograma = window.location.pathname.replace(/\/+$/, '') === '/cronograma'
 
 const { groups, history, loading, error, refresh, addPoints, resetAll } = useScoreboard()
 const { isAdmin, checkSession, login, logout } = useAuth()
@@ -67,6 +70,9 @@ async function handleReset() {
     @logout="logout"
   />
 
+  <SchedulePage v-if="isCronograma" />
+
+  <template v-else>
   <HeroSection :groups="groups" :leader-id="leaderId" />
 
   <div class="section-transition"><span>Cada ponto conta</span></div>
@@ -111,6 +117,7 @@ async function handleReset() {
       <ScoreHistory :history="history" :admin="isAdmin" @reset="handleReset" />
     </template>
   </main>
+  </template>
 
   <footer class="footer">
     <GlobeLabels class="footer-globe" />
