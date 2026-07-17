@@ -132,17 +132,28 @@ function pad(value) {
 
 @media (max-width: 480px) {
   .countdown-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
+    gap: 4px;
+    width: 100%;
   }
 
-  .colon {
-    display: none;
+  .unit {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2) 4px;
+    gap: 2px;
   }
 
   .unit-value {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 6.5vw, 1.7rem);
+  }
+
+  .unit-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  .colon {
+    font-size: 1.2rem;
   }
 }
 </style>

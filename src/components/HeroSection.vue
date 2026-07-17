@@ -11,6 +11,7 @@ const props = defineProps({
 })
 
 const heroBannerUrl = '/hero-banner.jpg'
+const heroBannerMobileUrl = '/hero-banner-mobile.jpg'
 
 function pointsFor(id) {
   return props.groups.find((g) => g.id === id)?.points ?? 0
@@ -193,14 +194,17 @@ onUnmounted(() => {
 
 <template>
   <section id="scoreboard" class="hero" aria-label="Placar principal">
-    <img
-      :src="heroBannerUrl"
-      alt=""
-      class="hero-bg"
-      loading="eager"
-      fetchpriority="high"
-      :style="{ transform: `translateY(${bgOffset}px)` }"
-    />
+    <picture>
+      <source :srcset="heroBannerMobileUrl" media="(max-width: 768px)" />
+      <img
+        :src="heroBannerUrl"
+        alt=""
+        class="hero-bg"
+        loading="eager"
+        fetchpriority="high"
+        :style="{ transform: `translateY(${bgOffset}px)` }"
+      />
+    </picture>
     <div class="hero-overlay"></div>
     <canvas ref="canvasRef" class="hero-particles" aria-hidden="true"></canvas>
 
@@ -561,13 +565,13 @@ onUnmounted(() => {
 }
 
 .team-motto {
-  font-size: 0.58rem;
-  font-weight: 600;
-  letter-spacing: 2px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: #e8ebf5;
   margin-top: var(--space-3);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 1), 0 2px 14px rgba(0, 0, 0, 0.95);
 }
 
 .vs-central {
@@ -812,6 +816,14 @@ onUnmounted(() => {
 
   .team-score {
     font-size: 2.6rem;
+  }
+
+  .team-motto {
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    margin-top: var(--space-2);
+    color: #f0f2f8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 1), 0 1px 10px rgba(0, 0, 0, 1);
   }
 }
 </style>
