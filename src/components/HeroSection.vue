@@ -794,14 +794,6 @@ onUnmounted(() => {
     padding: 74px 12px 50px;
   }
 
-  /* Fundo do hero no mobile: mostra a foto inteira (sem corte); a sobra fica
-     com o fundo escuro do hero. object-position no topo pra foto ficar na
-     regiao mais clara (o overlay escurece a base). */
-  .hero-bg {
-    object-fit: contain;
-    object-position: center top;
-  }
-
   .hero-scoreboard {
     flex-direction: column;
     gap: var(--space-6);
