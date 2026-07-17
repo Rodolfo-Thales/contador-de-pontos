@@ -60,11 +60,11 @@ Os textos e valores de pontos dos cards estão **direto no template** de `QuestC
 - Nome do grupo, pontos, selo "Liderando"
 - **Só para admin:** botões `+10 / +50 / +100 / −10` e campo de valor personalizado (limite ±10.000, em `MAX_AMOUNT`)
 
-### 9. Histórico completo
-**Arquivo:** `src/components/ScoreHistory.vue`
+### 9. Ação de zerar placar (só admin)
+**Arquivo:** `src/App.vue` (bloco `.admin-actions`, abaixo do placar detalhado)
 
-- Últimos **20** lançamentos com data/hora
 - Botão **"Zerar placar"** (só admin) — a confirmação (`window.confirm`) fica no `App.vue` (`handleReset`)
+- O histórico completo de lançamentos foi removido da página; o resumo recente continua na seção "Últimos lances" (`RecentHistorySection`)
 
 ### 10. Rodapé
 **Arquivos:** `src/App.vue` (o `<footer>`) + `src/components/GlobeLabels.vue` (globo 3D)

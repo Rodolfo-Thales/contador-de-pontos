@@ -5,7 +5,6 @@ import HeroSection from './components/HeroSection.vue'
 import RecentHistorySection from './components/RecentHistorySection.vue'
 import QuestSection from './components/QuestSection.vue'
 import GroupCard from './components/GroupCard.vue'
-import ScoreHistory from './components/ScoreHistory.vue'
 import AdminLoginDialog from './components/AdminLoginDialog.vue'
 import GlobeLabels from './components/GlobeLabels.vue'
 import SchedulePage from './components/SchedulePage.vue'
@@ -114,7 +113,9 @@ async function handleReset() {
         />
       </section>
 
-      <ScoreHistory :history="history" :admin="isAdmin" @reset="handleReset" />
+      <div v-if="isAdmin" class="admin-actions">
+        <button class="btn-reset" type="button" @click="handleReset">Zerar placar</button>
+      </div>
     </template>
   </main>
   </template>
@@ -206,6 +207,29 @@ async function handleReset() {
   font-size: 1.5rem;
   color: var(--color-muted);
   padding: var(--space-2);
+}
+
+.admin-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-reset {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-muted);
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-reset:hover {
+  color: #fca5a5;
+  border-color: #fca5a5;
 }
 
 .footer {

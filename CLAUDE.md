@@ -37,7 +37,7 @@ app.admin-password=<senha do admin local, min. 8 caracteres>
 - `src/styles/tokens.css` — **todos** os design tokens (cores dos grupos, superfícies, espaçamento). Troca de paleta é só aqui.
 - `src/api/client.js` — wrapper de fetch: cuida de CSRF (cookie XSRF-TOKEN → header X-XSRF-TOKEN) e erros.
 - `src/composables/` — `useAuth` (sessão admin) e `useScoreboard` (placar, com polling de 15s no App.vue).
-- `src/components/` — `GroupCard` (card do grupo + ações de admin), `ScoreHistory`, `AdminLoginDialog`, `AppHeader` (logo ainda é placeholder), `GlobeLabels` (globo 3D do rodapé, lib `cobe` v2 — **não tem `onRender`**, anima via `globe.update()` em rAF próprio).
+- `src/components/` — `GroupCard` (card do grupo + ações de admin), `AdminLoginDialog`, `AppHeader` (logo ainda é placeholder), `GlobeLabels` (globo 3D do rodapé, lib `cobe` v2 — **não tem `onRender`**, anima via `globe.update()` em rAF próprio).
 
 ## Backend (endpoints)
 

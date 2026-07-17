@@ -255,7 +255,10 @@ onUnmounted(() => {
         </div>
         <div class="tug-bar">
           <div class="tug-fill tug-fill--level-up" :style="{ width: levelUpPct + '%' }"></div>
-          <div class="tug-marker" aria-hidden="true"></div>
+          <div class="tug-fill tug-fill--os-300" :style="{ width: os300Pct + '%' }"></div>
+          <div class="tug-clash" :style="{ left: levelUpPct + '%' }" aria-hidden="true">
+            <span v-for="n in 9" :key="n" class="tug-spark"></span>
+          </div>
         </div>
       </div>
 
@@ -659,27 +662,114 @@ onUnmounted(() => {
   border-radius: 3px;
   background-color: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tug-fill {
+  position: absolute;
+  top: 0;
   height: 100%;
-  border-radius: 3px 0 0 3px;
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 12px rgba(59, 158, 255, 0.4);
 }
 
 .tug-fill--level-up {
+  left: 0;
+  border-radius: 3px 0 0 3px;
   background: var(--gradient-level-up);
+  box-shadow: 0 0 12px rgba(59, 158, 255, 0.4);
 }
 
-.tug-marker {
+.tug-fill--os-300 {
+  right: 0;
+  border-radius: 0 3px 3px 0;
+  background: var(--gradient-os-300);
+  box-shadow: 0 0 12px rgba(232, 67, 48, 0.4);
+}
+
+/* Ponto de encontro das duas cores: brilho quente + faiscas radiais */
+.tug-clash {
   position: absolute;
-  left: 50%;
-  top: -2px;
-  width: 1px;
+  top: 50%;
+  width: 10px;
   height: 10px;
-  background-color: rgba(255, 255, 255, 0.25);
+  transform: translate(-50%, -50%);
+  transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.tug-clash::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 190, 100, 0.5) 40%,
+    transparent 70%
+  );
+  animation: clash-glow 0.9s ease-in-out infinite;
+}
+
+@keyframes clash-glow {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+.tug-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 50%;
+  background: var(--spark-color, #ffe6a8);
+  box-shadow: 0 0 6px 1px var(--spark-color, rgba(255, 200, 120, 0.9));
+  opacity: 0;
+  animation: spark-fly 1.1s ease-out infinite;
+}
+
+@keyframes spark-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateY(0) scale(1);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateY(calc(-1 * var(--spark-dist)))
+      scale(0.3);
+  }
+}
+
+/* Faiscas alternadas: azul (Level Up), vermelho (Os 300) e branco quente */
+.tug-spark:nth-child(1) { --spark-angle: 8deg;  --spark-dist: 15px; --spark-color: #ffffff; animation-delay: 0s; }
+.tug-spark:nth-child(2) { --spark-angle: 48deg; --spark-dist: 12px; --spark-color: #ff7a5c; animation-delay: 0.12s; }
+.tug-spark:nth-child(3) { --spark-angle: 92deg; --spark-dist: 16px; --spark-color: #7cc4ff; animation-delay: 0.05s; }
+.tug-spark:nth-child(4) { --spark-angle: 140deg; --spark-dist: 11px; --spark-color: #ffd27a; animation-delay: 0.22s; }
+.tug-spark:nth-child(5) { --spark-angle: 178deg; --spark-dist: 14px; --spark-color: #ff7a5c; animation-delay: 0.09s; }
+.tug-spark:nth-child(6) { --spark-angle: 218deg; --spark-dist: 13px; --spark-color: #ffffff; animation-delay: 0.3s; }
+.tug-spark:nth-child(7) { --spark-angle: 262deg; --spark-dist: 16px; --spark-color: #7cc4ff; animation-delay: 0.16s; }
+.tug-spark:nth-child(8) { --spark-angle: 308deg; --spark-dist: 12px; --spark-color: #ffd27a; animation-delay: 0.26s; }
+.tug-spark:nth-child(9) { --spark-angle: 340deg; --spark-dist: 15px; --spark-color: #ff7a5c; animation-delay: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tug-spark {
+    display: none;
+  }
+  .tug-clash::before {
+    animation: none;
+  }
 }
 
 .hero-subtagline {
