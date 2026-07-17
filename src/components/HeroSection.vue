@@ -103,7 +103,8 @@ class Particle {
       this.x = w * 0.6 + Math.random() * (w * 0.4)
       this.color = [232, 67, 48]
     }
-    this.y = h + Math.random() * 40
+    // Nasce em qualquer altura (nao so na base) pra nao criar uma "linha de chao"
+    this.y = Math.random() * h
     this.r = Math.random() * 2.2 + 0.6
     this.vy = -(Math.random() * 1.2 + 0.3)
     this.vx = (Math.random() - 0.5) * 0.4
@@ -126,7 +127,9 @@ class Particle {
     } else if (lifeRatio > 0.7) {
       this.alpha = this.maxAlpha * (1 - (lifeRatio - 0.7) / 0.3)
     }
-    if (this.life >= this.maxLife || this.y < -20) this.reset()
+    // So recicla ao fim da vida (quando ja esta invisivel pelo fade), evitando
+    // o "pop" de reiniciar uma particula ainda visivel ao tocar uma borda.
+    if (this.life >= this.maxLife) this.reset()
   }
 
   draw() {
