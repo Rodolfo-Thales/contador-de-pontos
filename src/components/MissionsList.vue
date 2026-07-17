@@ -55,6 +55,10 @@ function progressPct(groupId) {
   <template v-else>
     <p v-if="actionError" class="status status--error" role="alert">{{ actionError }}</p>
 
+    <p v-if="isAdmin" class="admin-hint">
+      Modo admin: clique na equipe para marcar ou desmarcar a missão — pode marcar as duas.
+    </p>
+
     <div class="mw">
       <div v-for="mission in MISSIONS" :key="mission.id" class="mc rv" :class="{ v: revealed }">
         <span class="mn">{{ mission.number }}</span>
@@ -67,8 +71,9 @@ function progressPct(groupId) {
               :key="groupId"
               type="button"
               class="ms"
-              :class="{ 'ms--clickable': isAdmin }"
+              :class="{ 'ms--clickable': isAdmin, 'ms--done': isCompleted(mission.id, groupId) }"
               :disabled="!isAdmin || savingKey === mission.id + groupId"
+              :aria-pressed="isCompleted(mission.id, groupId)"
               @click="toggle(mission.id, groupId)"
             >
               <span class="ck" :class="isCompleted(mission.id, groupId) ? 'y' : 'n'">
@@ -193,6 +198,41 @@ function progressPct(groupId) {
 
 .ms--clickable {
   cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px dashed var(--color-border-strong);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color var(--transition-fast), background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.ms--clickable:hover:enabled {
+  border-color: rgba(52, 210, 123, 0.45);
+  background: rgba(52, 210, 123, 0.05);
+  transform: translateY(-1px);
+}
+
+.ms--clickable.ms--done {
+  border-style: solid;
+  border-color: rgba(52, 210, 123, 0.35);
+  background: rgba(52, 210, 123, 0.07);
+}
+
+.ms--clickable.ms--done:hover:enabled {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.05);
+}
+
+.ms--clickable:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.admin-hint {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--color-muted-dim);
+  margin-bottom: 18px;
 }
 
 .ck {
@@ -336,6 +376,11 @@ function progressPct(groupId) {
   .mss {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .ms--clickable {
+    width: 100%;
+    min-height: 44px;
   }
 }
 </style>
