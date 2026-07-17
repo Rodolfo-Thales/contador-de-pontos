@@ -44,8 +44,8 @@ defineProps({
       <div class="qd">Cada quilograma de alimento arrecadado conta pontos</div>
       <div class="qr">+5 pts por kg</div>
       <div class="qx">· 10kg = 50pts</div>
-      <div class="qy"> · 50kg = 250pts</div>
-      <div class="qz"> · 100kg = 500pts</div>
+      <div class="qx"> · 50kg = 250pts</div>
+      <div class="qx"> · 100kg = 500pts</div>
       <div class="qb">Doe e pontue!</div>
     </div>
 
