@@ -43,7 +43,10 @@ defineProps({
       <div class="qt">Arrecadar Alimentos</div>
       <div class="qd">Cada quilograma de alimento arrecadado conta pontos</div>
       <div class="qr">+5 pts por kg</div>
-      <div class="qx">10kg = 50pts · 50kg = 250pts · 100kg = 500pts</div>
+      <div class="qx">· 10kg = 50pts</div>
+      <div class="qy"> · 50kg = 250pts</div>
+      <div class="qz"> · 100kg = 500pts</div>
+      <div class="qb">Doe e pontue!</div>
     </div>
 
     <div class="qc rv dl4" :class="{ v: revealed }">
@@ -60,7 +63,7 @@ defineProps({
       <ul class="qcl">
         <li><span class="dia">Segunda</span> Culto da Vitória</li>
         <li><span class="dia">Quarta</span> Culto da Palavra</li>
-        <li><span class="dia">Quinta</span> Interligados</li>
+<!--        <li><span class="dia">Quinta</span> Interligados</li> -->
         <li class="cr"><span class="dia">Sábado</span> Connect <span class="cchip">Jovens</span></li>
         <li><span class="dia">Domingo</span> Culto de Celebração</li>
       </ul>
