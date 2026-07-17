@@ -9,7 +9,7 @@ Placar de competição entre dois grupos do departamento de jovens (Connect) da 
 - **Banco**: PostgreSQL no Supabase (conexão via *Session pooler*, porta 5432 — a conexão direta é IPv6-only e falha no Windows).
 - **Produção**: front na **Vercel**, backend no **Railway** (Dockerfile), banco no Supabase.
   - O `vercel.json` faz rewrite de `/api/*` para o Railway → navegador só fala com o domínio da Vercel (same-origin, cookies `SameSite=Lax` funcionam).
-  - URL: https://contador-de-pontos-two.vercel.app
+  - URL: https://gincanaconnect.vercel.app
 
 ## Rodar localmente
 
